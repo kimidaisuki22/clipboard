@@ -2,6 +2,7 @@
 #include <chrono>
 #include <concurrentqueue/blockingconcurrentqueue.h>
 #include <exception>
+#include <filesystem>
 #include <memory>
 #include <optional>
 #include <stdint.h>
@@ -116,6 +117,11 @@ int main() {
   auto run_t = [&] {
     try {
       dirsystem::App_dirs dirs{"clipboards"};
+      if (!std::filesystem::exists(dirs.data())) {
+
+        std::cout << "create config dir: " << dirs.data() << "\n";
+        std::filesystem::create_directories(dirs.data());
+      }
       std::cout << "running on " << dirs.data() << "\n";
       leveldb::Options opt;
       opt.create_if_missing = true;
