@@ -1,7 +1,10 @@
 #include "watch_clipboard.h"
+#include <chrono>
 #include <concurrentqueue/blockingconcurrentqueue.h>
+#include <exception>
 #include <memory>
 #include <optional>
+#include <stdint.h>
 #include <string>
 #include <thread>
 
@@ -83,8 +86,10 @@ LRESULT CALLBACK ClipboardViewerCallback(HWND hWnd, UINT msg, WPARAM wParam,
 
     std::cout << "Clipboard content has changed." << std::endl;
     auto text = read_clipboard();
-    auto data = std::make_unique<Clip_data>(text.value());
-    g_queue_->enqueue(std::move(data));
+    if (text) {
+      auto data = std::make_unique<Clip_data>(text.value());
+      g_queue_->enqueue(std::move(data));
+    }
 
   } break;
   case WM_CHANGECBCHAIN:
@@ -97,16 +102,41 @@ LRESULT CALLBACK ClipboardViewerCallback(HWND hWnd, UINT msg, WPARAM wParam,
 
   return DefWindowProc(hWnd, msg, wParam, lParam);
 }
+
+#include "add_to_startup.h"
+#include <dirsystem/app_dirs.h>
+#include <leveldb/db.h>
+
 int main() {
   ClipQueue queue;
 
+  add_to_start_up("clipboard.lnk");
+
   auto queue_t = [&queue] { queue.run(); };
   auto run_t = [&] {
-    auto data_queue = queue.get_queue();
-    std::unique_ptr<Clip_data> data;
-    while (true) {
-      data_queue->wait_dequeue(data);
-      std::cout << data->get_text() << "\n";
+    try {
+      dirsystem::App_dirs dirs{"clipboards"};
+      std::cout << "running on " << dirs.data() << "\n";
+      leveldb::Options opt;
+      opt.create_if_missing = true;
+      leveldb::DB *db{};
+      leveldb::DB::Open(opt, (dirs.data() / "clipboard_db").string(), &db);
+
+      auto data_queue = queue.get_queue();
+      std::unique_ptr<Clip_data> data;
+      while (true) {
+        data_queue->wait_dequeue(data);
+        std::cout << data->get_text() << "\n";
+        uint64_t t{};
+        if (db) {
+          t = std::chrono::high_resolution_clock::now()
+                  .time_since_epoch()
+                  .count();
+          db->Put({}, std::to_string(t), data->get_text());
+        }
+      }
+    } catch (std::exception &e) {
+      std::cerr << e.what() << "\n";
     }
   };
   std::thread{queue_t}.detach();
