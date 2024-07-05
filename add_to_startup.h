@@ -5,16 +5,7 @@
 #include <string>
 #include <string_view>
 
-// utf-8 to wstring
-// use win api
-std::wstring to_wstring(std::string str) {
-  int len = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, NULL, 0);
-  wchar_t *buffer = new wchar_t[len];
-  MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, buffer, len);
-  std::wstring wstr(buffer);
-  delete[] buffer;
-  return wstr;
-}
+
 
 bool add_to_start_up(std::string_view link_name) {
   std::string shortcutPath;
