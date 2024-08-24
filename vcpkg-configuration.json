@@ -1,19 +1,25 @@
 {
     "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg-configuration.schema.json",
-    "default-registry":{
-        "kind": "git",
-        "repository": "https://github.com/microsoft/vcpkg",
-        "reference": "2023.06.20",
-        "baseline": "f6a5d4e8eb7476b8d7fc12a56dff300c1c986131"
-    }  ,
+    "default-registry": {
+      "kind": "builtin",
+      "baseline": "2024.07.12"
+    },
     "registries": [
-        {
-            "kind": "git",
-            "repository": "https://github.com/kimidaisuki22/vcpkg-ports",
-            "baseline": "b30af030036c39468c17a5bbc8501630790b0c06",
-            "packages": [
-                "crc32", "dirsystem"
-            ]
-        }
+      {
+        "kind": "git",
+        "baseline": "d2e9fd3099fa38090177b6db87a614e5aafb21a9",
+        "reference": "main",
+        "repository": "https://gitlab.cayi-77.com/cayi-77/vcpkg-ports.git",
+        "packages": [
+          "crc32",
+          "dirsystem",
+          "win-manifests",
+          "cy",
+          "stb-impl",
+          "asynccurl",
+          "subprocess",
+          "image-process"
+        ]
+      }
     ]
-}
+  }

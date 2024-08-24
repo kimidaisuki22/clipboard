@@ -111,7 +111,7 @@ LRESULT CALLBACK ClipboardViewerCallback(HWND hWnd, UINT msg, WPARAM wParam,
 int main() {
   ClipQueue queue;
 
-  add_to_start_up("clipboard.lnk");
+  // add_to_start_up("clipboard.lnk");
 
   auto queue_t = [&queue] { queue.run(); };
   auto run_t = [&] {

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.25.0)
 project(clipboards VERSION 0.1.0 LANGUAGES C CXX)
 
 include(CTest)
@@ -19,7 +19,7 @@ target_link_libraries(main PRIVATE unofficial::concurrentqueue::concurrentqueue)
 
 find_package(dirsystem CONFIG REQUIRED)
 target_link_libraries(main PRIVATE dirsystem::dirsystem)
-
+add_executable(to_html to_html.cpp)
 
 # set cpack destination
 set(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/package")
