@@ -106,10 +106,26 @@ LRESULT CALLBACK ClipboardViewerCallback(HWND hWnd, UINT msg, WPARAM wParam,
 
 #include "add_to_startup.h"
 #include <dirsystem/app_dirs.h>
+#include <format>
 #include <leveldb/db.h>
 
-int main() {
+void push_text_to_server(std::string server, std::string text) {
+  std::string str = std::format(
+      R"**(curl "http://{}/api/text_board/0"  -H "Host: {}"   --data-raw "{}")**",
+      server, server, text);
+  system(str.data());
+}
+int main(int argc, char **argv) {
   ClipQueue queue;
+  std::string server;
+  for (int i = 2; i < argc; i++) {
+    if (argv[i - 1] == std::string("--server")) {
+      server = argv[i];
+    }
+  }
+  if (!server.empty()) {
+    std::cout << "using server: " << server << "\n";
+  }
 
   // add_to_start_up("clipboard.lnk");
 
@@ -133,6 +149,10 @@ int main() {
       while (true) {
         data_queue->wait_dequeue(data);
         std::cout << data->get_text() << "\n";
+        if (!server.empty()) {
+          std::cout << "Push to " << server << "\n";
+          push_text_to_server(server, data->get_text());
+        }
         uint64_t t{};
         if (db) {
           t = std::chrono::high_resolution_clock::now()
