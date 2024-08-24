@@ -1,34 +1,35 @@
 
 #include <ShlObj.h>
 #include <Windows.h>
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <string_view>
 
-
-
 bool add_to_start_up(std::string_view link_name) {
-  std::string shortcutPath;
-  std::string programPath;
+  std::wstring shortcutPath;
+  std::wstring programPath;
   shortcutPath.resize(MAX_PATH);
   programPath.resize(MAX_PATH);
 
   // Get the path to the current program
-  GetModuleFileName(NULL, programPath.data(), MAX_PATH);
+  GetModuleFileNameW(NULL, programPath.data(), MAX_PATH);
 
   // Get the path to the Startup folder
-  if (SHGetSpecialFolderPath(NULL, shortcutPath.data(), CSIDL_STARTUP, FALSE)) {
+  if (SHGetSpecialFolderPathW(NULL, shortcutPath.data(), CSIDL_STARTUP,
+                              FALSE)) {
     shortcutPath = shortcutPath.data();
     // Append the program name to the Startup folder path
-    shortcutPath += std::string("\\") + link_name.data();
+    std::filesystem::path path{shortcutPath};
+    path /= link_name;
 
     // Create the shortcut
-    IShellLink *shellLink;
+    IShellLinkW *shellLink;
     HRESULT hr = CoInitialize(NULL);
 
     if (SUCCEEDED(hr)) {
       hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
-                            IID_IShellLink, (LPVOID *)&shellLink);
+                            IID_IShellLinkW, (LPVOID *)&shellLink);
 
       if (SUCCEEDED(hr)) {
         shellLink->SetPath(programPath.data());
@@ -38,8 +39,7 @@ bool add_to_start_up(std::string_view link_name) {
             shellLink->QueryInterface(IID_IPersistFile, (LPVOID *)&persistFile);
 
         if (SUCCEEDED(hr)) {
-          auto wshortcutPath = to_wstring(shortcutPath);
-          persistFile->Save(wshortcutPath.c_str(), TRUE);
+          persistFile->Save(path.native().c_str(), TRUE);
           //   persistFile->Save(L"D:/bc.lnk", TRUE);
           persistFile->Release();
         }
@@ -51,8 +51,7 @@ bool add_to_start_up(std::string_view link_name) {
     }
 
     if (SUCCEEDED(hr)) {
-      std::cout << "Shortcut created successfully: " << shortcutPath
-                << std::endl;
+      std::cout << "Shortcut created successfully: " << path << std::endl;
       return true;
     } else {
       std::cerr << "Failed to create shortcut." << std::endl;
